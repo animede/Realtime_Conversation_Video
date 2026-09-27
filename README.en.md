@@ -6,6 +6,12 @@ English | [日本語](README.md)
 
 This is a thin app specialized for conversation with characters registered in r-n-v. Video generation, TTS, and presets stay on the r-n-v side; the conversational brain — ROLE injection, microphone input, rolling history summarization — lives here.
 
+## Demo (real speed, 50 s)
+
+[![Conversation demo](docs/assets/demo-conversation-preview.jpg)](docs/assets/demo-conversation.mp4)
+
+An unedited, real-speed recording of a voice/text conversation with a character. Response chunks generate faster than they play, so the conversation never stalls. Click to open the [MP4 (6.4 MB)](docs/assets/demo-conversation.mp4).
+
 ## Architecture
 
 ```
