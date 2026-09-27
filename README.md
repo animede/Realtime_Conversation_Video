@@ -8,7 +8,11 @@ r-n-v で登録したキャラクターとの会話に特化した薄いアプ�
 
 ## 動作サンプル（実時間・50秒）
 
-[![会話デモ](docs/assets/demo-conversation-preview.jpg)](docs/assets/demo-conversation.mp4)
+
+
+https://github.com/user-attachments/assets/b7af6e12-372f-4191-9721-82ea52ecd525
+
+
 
 マイクとテキストでキャラクターと会話する様子を、編集なしの実時間で収録したものです。応答チャンクは再生より速く生成されるため、会話は途切れずに続きます。クリックで[MP4版（6.4MB）](docs/assets/demo-conversation.mp4)を開きます。
 
