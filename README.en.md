@@ -8,7 +8,11 @@ This is a thin app specialized for conversation with characters registered in r-
 
 ## Demo (real speed, 50 s)
 
-[![Conversation demo](docs/assets/demo-conversation-preview.jpg)](docs/assets/demo-conversation.mp4)
+
+
+https://github.com/user-attachments/assets/6fa5497e-1dd0-45fa-8336-aaca383e4c79
+
+
 
 An unedited, real-speed recording of a voice/text conversation with a character. Response chunks generate faster than they play, so the conversation never stalls. Click to open the [MP4 (6.4 MB)](docs/assets/demo-conversation.mp4).
 
