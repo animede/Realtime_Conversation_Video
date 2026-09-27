@@ -1,0 +1,260 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: #14161c;
+  color: #e8eaf0;
+}
+.layout {
+  display: grid;
+  /* 中央の6pxはドラッグ用スプリッタ。--side-width は layout.js が書き換える */
+  grid-template-columns: minmax(0, 1fr) 6px var(--side-width, 230px);
+  gap: 6px;
+  padding: 16px;
+  height: 100vh;
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    height: auto;
+  }
+  .splitter { display: none; }
+  .stage { aspect-ratio: 4 / 3; flex: none; }
+}
+h1 { font-size: 18px; margin: 0 0 8px; }
+.hint { color: #9aa1b0; font-size: 12px; margin: 4px 0; }
+.error { color: #ff8080; }
+
+/* --- ステージ --- */
+.stage-column { display: flex; flex-direction: column; min-width: 0; }
+.stage {
+  position: relative;
+  flex: 1;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.stage img, .stage video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.stage img.visible, .stage video.visible, .stage video.active { opacity: 1; }
+/* r-n-v純正と同じ重ね順: 発話プレーヤ(active=1)は待機層(2〜4)の下。
+   ターン終了で待機がフェードインすると、止まったプレーヤの最終フレームを
+   上から隠す。プレーヤを上にすると最終フレームが残って「凍結」に見える。 */
+#player-a.active, #player-b.active { z-index: 1; }
+#stage-idle-a, #stage-idle-b { z-index: 3; }
+#stage-character { z-index: 2; }
+#tap-to-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 7;
+  background: rgba(47, 111, 237, 0.92);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 18px;
+  padding: 14px 26px;
+  cursor: pointer;
+}
+#caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 6;
+  padding: 10px 16px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+  font-size: 15px;
+  min-height: 1.4em;
+}
+.stage-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px 0;
+  font-size: 12px;
+  color: #9aa1b0;
+}
+
+/* --- 幅調整スプリッタ --- */
+.splitter {
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+}
+/* 列自体は6pxと細いので、左右に広げた透明の当たり判定で掴みやすくする */
+.splitter::after {
+  content: "";
+  position: absolute;
+  inset: 0 -5px;
+}
+.splitter::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 52px;
+  border-radius: 2px;
+  background: #333848;
+  transition: background 0.15s;
+}
+.splitter:hover::before, .splitter.dragging::before { background: #5b8cff; }
+
+/* --- サイドパネル --- */
+.side-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #1c1f28;
+  border-radius: 12px;
+  padding: 16px;
+}
+#chat-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#chat-panel[hidden] { display: none; }
+/* 幅を広げたときにカードが縦に伸びてページごとスクロールしないよう、
+   一覧側で高さを閉じてpreset-listの中だけをスクロールさせる */
+#preset-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#preset-panel[hidden] { display: none; }
+
+.preset-list {
+  /* 幅を広げたらカードを大きくせず列を増やす。最小列幅を固定値にすると
+     パネルを狭めた時に1列へ落ちてカードが逆に巨大化するので、
+     「50%-gap半分」を上限に取り、どんな幅でも最低2列を保証する */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100px, calc(50% - 5px)), 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  align-content: start;
+}
+.preset-card {
+  background: #262a36;
+  border: 1px solid #333848;
+  border-radius: 10px;
+  padding: 8px;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+}
+.preset-card:hover { border-color: #5b8cff; }
+.preset-card img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.preset-card span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.chat-header button, .settings-row button, .chat-form button, #mic-toggle {
+  background: #2f6fed;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.chat-header button { background: #3a4052; }
+#mic-toggle.on { background: #d9534f; }
+
+.settings { background: #232734; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+.settings summary { cursor: pointer; font-size: 13px; color: #c3c9d8; }
+.settings label { display: block; font-size: 12px; color: #9aa1b0; margin: 8px 0 4px; }
+.settings textarea, .settings input, .chat-form input {
+  width: 100%;
+  background: #14161c;
+  border: 1px solid #333848;
+  border-radius: 8px;
+  color: #e8eaf0;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+/* 幅を絞ったときは「反映」ボタンを次の行へ送る(はみ出させない) */
+.settings-row { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; }
+.settings-row label { flex-shrink: 0; }
+.settings-row input { width: 140px; }
+.settings-row button { margin-left: auto; }
+
+.chat-log {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 2px;
+}
+.bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.bubble.user { align-self: flex-end; background: #2f6fed; }
+.bubble.assistant { align-self: flex-start; background: #2a2f3d; }
+.bubble.live { opacity: 0.85; }
+.bubble.error { align-self: center; background: #4a2530; color: #ffb3b3; font-size: 12px; }
+
+.chat-form { display: flex; gap: 8px; margin-top: 8px; }
+.chat-form input { flex: 1; }
+
+.mic-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.mic-meter {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  background: #14161c;
+  border-radius: 4px;
+  overflow: hidden;
+}
+#mic-level {
+  height: 100%;
+  width: 0;
+  background: #57d38c;
+  transition: width 0.08s linear;
+}
+#mic-level.active { background: #ffb020; }
+/* 録音開始の判定ライン。メーターの振れがこれを越えると録音が始まる */
+#mic-threshold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #e8eaf0;
+  box-shadow: 0 0 2px #000;
+}
+
+.mic-sens-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.mic-sens-row label { font-size: 12px; color: #9aa1b0; flex-shrink: 0; }
+.mic-sens-row input[type="range"] { flex: 1; min-width: 0; accent-color: #2f6fed; }
+#mic-sensitivity-value {
+  font-size: 11px;
+  color: #9aa1b0;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* 会話ログ保存 */
+.log-toolbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+.log-toolbar .tiny { font-size: 11px; padding: 2px 10px; }

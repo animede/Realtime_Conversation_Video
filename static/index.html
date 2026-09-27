@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Realtime Conversation Video — 会話コンソール</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="stage-column">
+      <div class="stage">
+        <img id="stage-character" alt="キャラクター" hidden>
+        <video id="stage-idle-a" muted playsinline preload="auto" hidden></video>
+        <video id="stage-idle-b" muted playsinline preload="auto" hidden></video>
+        <video id="player-a" playsinline preload="auto"></video>
+        <video id="player-b" playsinline preload="auto"></video>
+        <div id="caption"></div>
+        <button id="tap-to-play" type="button" hidden>▶ タップで再生</button>
+      </div>
+      <div class="stage-footer">
+        <span id="stage-status">未接続</span>
+        <span id="app-status"></span>
+      </div>
+    </section>
+
+    <div id="splitter" class="splitter" role="separator" aria-orientation="vertical"
+         title="ドラッグで幅を調整 / ダブルクリックで既定に戻す"></div>
+
+    <section class="side-column">
+      <div id="preset-panel">
+        <h1>キャラクターを選ぶ</h1>
+        <p class="hint">realtime-narration-video で登録したプリセットから選択します。</p>
+        <div id="preset-list" class="preset-list"></div>
+      </div>
+
+      <div id="chat-panel" hidden>
+        <header class="chat-header">
+          <h1 id="character-name"></h1>
+          <button id="change-character" type="button">キャラ変更</button>
+        </header>
+
+        <details class="settings" open>
+          <summary>ROLE・話者ID</summary>
+          <label for="role-input">SYSTEMプロンプトに追加するROLE(キャラ設定)</label>
+          <textarea id="role-input" rows="5"
+            placeholder="例: あなたは元気な看板娘の「ひより」。一人称は「あたし」。語尾に「〜だよ」を付け、短めに明るく話す。"></textarea>
+          <div class="settings-row">
+            <label for="voice-id-input">TTS話者ID</label>
+            <input id="voice-id-input" type="number">
+            <button id="apply-settings" type="button">反映</button>
+          </div>
+        </details>
+
+        <div class="log-toolbar">
+          <button id="save-log" type="button" class="tiny" hidden>会話ログを保存</button>
+        </div>
+        <div id="chat-log" class="chat-log"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input id="chat-text" type="text" placeholder="メッセージを入力" autocomplete="off">
+          <button type="submit">送信</button>
+        </form>
+
+        <div class="mic-row">
+          <button id="mic-toggle" type="button">マイクON</button>
+          <div class="mic-meter">
+            <div id="mic-level"></div>
+            <div id="mic-threshold" title="このライン以上の音量で録音を開始します"></div>
+          </div>
+        </div>
+        <div class="mic-sens-row">
+          <label for="mic-sensitivity">感度</label>
+          <input id="mic-sensitivity" type="range" min="0" max="100" step="1"
+                 title="右ほど敏感(小さな声でも録音開始)。メーターの縦線が判定ラインです">
+          <span id="mic-sensitivity-value"></span>
+        </div>
+        <div id="mic-status" class="hint">マイクOFF</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/layout.js"></script>
+  <script src="/static/mic.js"></script>
+  <script src="/static/player.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
