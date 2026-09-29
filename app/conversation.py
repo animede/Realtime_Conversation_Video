@@ -8,10 +8,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from time import time
 from uuid import uuid4
 
 from .config import settings
+
+_WEEKDAY_JA = "月火水木金土日"
+
+
+def _datetime_line() -> str:
+    """ターン注入用の現在日時(時間の質問に答えられるようにする)。"""
+    now = datetime.now().astimezone()
+    return (f"(現在の日時: {now.strftime('%Y年%m月%d日')}"
+            f"({_WEEKDAY_JA[now.weekday()]}) {now.strftime('%H:%M')})")
 
 BASE_SYSTEM_INSTRUCTION = (
     "あなたは会話中のAIキャラクタです。"
@@ -55,6 +65,22 @@ class Conversation:
     def build_messages(self, user_content: str | list) -> list[dict]:
         # turns は畳み込み済みの保持分のみ(バッチ畳み込み中は max_history+batch まで
         # 伸びる)。全件載せないと「要約前なのにプロンプトから消える」欠落が起きる
+        #
+        # 現在日時はプレフィックス(system)ではなく末尾のユーザーメッセージにだけ
+        # 注入する。末尾は毎ターン新規の未キャッシュ領域なので、生きた時刻でも
+        # プレフィックスKVキャッシュに影響しない(systemに入れると毎ターン割れる)。
+        # 履歴に記録されるのは元のユーザーテキスト(user_text)なので、日時行が
+        # 過去ターンとしてプレフィックスに残ることもない(AI-chara方式)。
+        line = _datetime_line()
+        if isinstance(user_content, str):
+            user_content = f"{line}\n{user_content}"
+        else:
+            items = [dict(item) for item in user_content]
+            for item in items:
+                if item.get("type") == "text":
+                    item["text"] = f"{line}\n{item['text']}"
+                    break
+            user_content = items
         messages: list[dict] = [{"role": "system", "content": self.system_prompt()}]
         for turn in self.turns:
             messages.append({"role": turn.role, "content": turn.for_history()})
