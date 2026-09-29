@@ -36,7 +36,7 @@ We avoided server-side VAD because it requires streaming audio to the server con
 Each conversation processes one turn at a time (busy gate; a send while one is in flight gets 409). Within a turn the concurrency structure is:
 
 - LLM streaming reception → each delta immediately to the browser over SSE (`reply_delta`)
-- Transcription of the user's utterance (audio turns only) → **the turn's entire WAV segment**, as cut by the VAD, goes to a separate one-shot LLM call; SSE (`user_text`) as soon as it completes. It never touches the reply stream (this app has no cut-sentences-from-the-stream processing — that mechanism belongs to r-n-v's own chat mode)
+- Transcription of the user's utterance (audio turns only) → **the entire WAV of the user's speech for that turn**, as segmented from the mic input by the VAD, goes to a separate one-shot LLM call; SSE (`user_text`) as soon as it completes. It never touches the reply stream (this app has no cut-sentences-from-the-stream processing — that mechanism belongs to r-n-v's own chat mode)
 - After the reply settles → history commit, background summarization for long replies (`summarize_later`), handoff to r-n-v
 
 Every failure reaches the user with a reason via the SSE `error` event. Not dying silently in the background is a priority.
