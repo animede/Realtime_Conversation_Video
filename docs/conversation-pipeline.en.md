@@ -25,6 +25,8 @@ There are two reasons. First, latency: a serial ASR makes the reply wait for tra
 
 Transcription still happens — but **only for display and history, in parallel with the reply stream** ([llm.py](../app/llm.py), `transcribe`). On failure it just returns `None` and the conversation continues on direct audio input. Transcription is auxiliary information, not a dependency.
 
+This "text is auxiliary" relationship is symmetric on the output side. The LLM's reply text is only shown on screen as a secondary aid — what the user actually attends to is the character's video and voice. The canonical form of the reply is the text handed to speech synthesis, which is why the base instruction bans Markdown, emojis, symbol runs, and anything else that becomes noise when read aloud. Not treating text as the primary display is exactly what makes this read-aloud-first trade-off possible.
+
 ## 3. Browser-side VAD
 
 Speech segmentation happens entirely in the browser ([mic.js](../static/mic.js)): a hybrid energy (RMS) + ZCR decision, a 250–4000 Hz band-pass front end, a 900 ms silence cut, fragments under 260 ms discarded, six pre-roll frames, output as WAV (PCM16 mono).
