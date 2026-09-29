@@ -94,3 +94,5 @@
 動画が始まったあとのチャンク供給——文単位の TTS、音声実測長でのチャンク編成、生成と再生のパイプライン化、切替判定——は r-n-v の担当領域であり、本稿では扱いません。仕組みは [r-n-v テクニカルガイドの会話パイプライン節](https://github.com/animede/Realtime_Narration_Video/blob/master/docs/technical-guide.md#5-会話パイプライン)を参照してください。
 
 本アプリ側から押さえておくべきは、定常状態を成立させる不等式が1つだけということです: **チャンクの生成時間 < チャンクの再生時間**。これが成り立つ限り、2番目以降のチャンクは前のチャンクの再生中に生成が終わり、会話は途切れません（実測では後続チャンクの再生余裕は約1.5秒）。本アプリがこの定常状態に影響する経路は返答の長さだけで、長い返答はチャンク数を増やしますが、不等式が成り立つ限り破綻はしません。
+
+そもそも22Bの動画拡散モデルがこの不等式を満たせること自体が、本アプリと r-n-v の前提です。それを成立させている高速化（蒸留ステップ間引き・NVFP4・CUDA Graph・非同期エンコード）と32GB級GPUへの低VRAM化は、[diffusers-ltx2_5](https://github.com/animede/diffusers-ltx2_5) の[速度編](https://github.com/animede/diffusers-ltx2_5/blob/main/docs/optimization-techniques.md)・[低VRAM編](https://github.com/animede/diffusers-ltx2_5/blob/main/docs/lowvram-techniques.md)で詳しく解説しています。
