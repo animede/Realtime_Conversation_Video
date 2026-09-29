@@ -88,3 +88,9 @@ The price is that time-to-first-video includes **the full completion of LLM gene
 3. **First video and audio**: r-n-v generates only the turn's first chunk at reduced resolution and steps, delivering first motion in about 2.6 seconds; subsequent chunks generate behind playback and are never seen. See [r-n-v technical guide §7.1](https://github.com/animede/Realtime_Narration_Video/blob/master/docs/technical-guide.en.md#71-low-resolution-first-chunk-the-lever-that-sets-conversational-responsiveness)
 
 Generation time for every chunk after the first hides behind playback, so these three segments are all that perceived latency consists of — and each has its own independent lever (the VAD silence threshold / reply-length instruction and cache design / first-chunk resolution).
+
+## 9. Steady state after video starts (out of scope here)
+
+Chunk supply once the video is playing — sentence-level TTS, chunk assembly from measured audio durations, the generation/playback pipeline, switch decisions — is r-n-v's territory and is not covered in this document. See the [conversation pipeline section of the r-n-v technical guide](https://github.com/animede/Realtime_Narration_Video/blob/master/docs/technical-guide.en.md#5-conversation-pipeline) for the mechanics.
+
+What matters from this app's side is that the steady state rests on a single inequality: **chunk generation time < chunk playback time**. As long as it holds, every chunk after the first finishes generating while the previous one plays, and the conversation never stalls (measured playback margin on subsequent chunks: about 1.5 seconds). The only path by which this app influences that steady state is reply length — a longer reply means more chunks, but as long as the inequality holds, nothing breaks.
