@@ -75,14 +75,16 @@ The principle is applied here as follows:
 
 The reply text is posted to r-n-v's narration endpoint (`POST /api/sessions/{id}/narrations`) **as one POST of the full text, after the entire reply settles** — not chunk by chunk. Splitting into sentences, TTS, audio/chunk assembly, and pipelined video generation all happen inside r-n-v once it receives the full text. If the previous turn's generation has not finished, the endpoint returns 409, so the app retries at 1-second intervals up to 30 times.
 
-Not streaming sentence-by-sentence into r-n-v during the LLM stream is a deliberate trade to keep the boundary at a single point of settled text. Since replies are instructed to be short, the cost of waiting for settlement stays small.
+The orthodox approach here would be to **detect sentence and clause boundaries while receiving the LLM stream, and feed each settled sentence into TTS and video generation as it arrives** (r-n-v's own chat mode works exactly that way). This app deliberately does not. r-n-v's narration API is turn-based, so posting sentence by sentence would fragment the turn — idle transitions would slip in between, and start/end pose continuity would break. Doing it properly would require building an "append text to an in-progress turn" API on the r-n-v side, a change on both sides of the boundary; keeping the boundary at a single point of settled text avoids that complexity entirely.
+
+The price is that time-to-first-video includes **the full completion of LLM generation** (not TTFT). With short replies the overhead is a measured 0.2–0.4 seconds and imperceptible — but **the longer the reply, the later the video starts, by exactly that much**. Instructing the model to keep replies short is not a stylistic preference; it is a precondition of this design. The moment a use case needs long replies (narration-style monologues, say) is the moment to consider the append API.
 
 ## 8. The first-response latency budget
 
 "From when you stop speaking to when the character starts speaking" is the sum of three segments:
 
 1. **Speech finalization**: 900 ms of silence (the VAD's cut decision — shorter and it would cut on mid-utterance breaths)
-2. **Reply generation**: LLM streaming, kept short by prompt instruction, with prefill held down by the cache design above
+2. **Reply generation**: LLM streaming — but video start waits for **full completion** (section 7), so what matters here is total generation time, not TTFT. Held down by the short-reply instruction and the cache design above
 3. **First video and audio**: r-n-v generates only the turn's first chunk at reduced resolution and steps, delivering first motion in about 2.6 seconds; subsequent chunks generate behind playback and are never seen. See [r-n-v technical guide §7.1](https://github.com/animede/Realtime_Narration_Video/blob/master/docs/technical-guide.en.md#71-low-resolution-first-chunk-the-lever-that-sets-conversational-responsiveness)
 
 Generation time for every chunk after the first hides behind playback, so these three segments are all that perceived latency consists of — and each has its own independent lever (the VAD silence threshold / reply-length instruction and cache design / first-chunk resolution).
