@@ -73,7 +73,7 @@ The principle is applied here as follows:
 
 ## 7. Handing off to video
 
-The reply text is posted to r-n-v's narration endpoint (`POST /api/sessions/{id}/narrations`) **after it settles**. Sentence-level TTS, audio/chunk assembly, and pipelined video generation are r-n-v's job. If the previous turn's generation has not finished, the endpoint returns 409, so the app retries at 1-second intervals up to 30 times.
+The reply text is posted to r-n-v's narration endpoint (`POST /api/sessions/{id}/narrations`) **as one POST of the full text, after the entire reply settles** — not chunk by chunk. Splitting into sentences, TTS, audio/chunk assembly, and pipelined video generation all happen inside r-n-v once it receives the full text. If the previous turn's generation has not finished, the endpoint returns 409, so the app retries at 1-second intervals up to 30 times.
 
 Not streaming sentence-by-sentence into r-n-v during the LLM stream is a deliberate trade to keep the boundary at a single point of settled text. Since replies are instructed to be short, the cost of waiting for settlement stays small.
 
