@@ -33,6 +33,8 @@ https://github.com/user-attachments/assets/b7af6e12-372f-4191-9721-82ea52ecd525
 - **話者ID**: r-n-v の `PATCH /api/sessions/{id}/settings` で反映。
 - **履歴**: 直近4ターン+古いターンはローリング要約。長い返答は要約版を履歴に使う。
 
+これらの設計判断の理由(ASRを返答経路から外す構造、KVキャッシュを守る運用設計、初回応答のレイテンシ予算)は [docs/conversation-pipeline.md](docs/conversation-pipeline.md) で解説しています。
+
 ## 起動
 
 前提サービス: gateway(8630) → TTS(10101) → r-n-v(8782)。

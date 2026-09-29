@@ -29,6 +29,8 @@ Browser ──(mic VAD / text)──> Realtime Conversation Video (8791)
 - **ROLE**: appended to the SYSTEM prompt; stored per preset in the browser's localStorage and synced to the server before each turn.
 - **History**: last 4 turns kept verbatim; older turns roll up into a running summary. Long replies enter history as summaries.
 
+The reasoning behind these decisions (the ASR-less reply path, the operational design that protects the KV cache, the first-response latency budget) is explained in [docs/conversation-pipeline.en.md](docs/conversation-pipeline.en.md).
+
 ## Running
 
 Prerequisite stack, bottom-up: [diffusers-movie-server](https://github.com/animede/diffusers-movie-server) gateway (8630) → AivisSpeech Engine TTS (10101) → [Realtime_Narration_Video](https://github.com/animede/Realtime_Narration_Video) (8782, a CORS-enabled build from 2026-09-17 or later).
