@@ -53,8 +53,10 @@ class Conversation:
         return "\n\n".join(parts)
 
     def build_messages(self, user_content: str | list) -> list[dict]:
+        # turns は畳み込み済みの保持分のみ(バッチ畳み込み中は max_history+batch まで
+        # 伸びる)。全件載せないと「要約前なのにプロンプトから消える」欠落が起きる
         messages: list[dict] = [{"role": "system", "content": self.system_prompt()}]
-        for turn in self.turns[-settings.max_history * 2:]:
+        for turn in self.turns:
             messages.append({"role": turn.role, "content": turn.for_history()})
         messages.append({"role": "user", "content": user_content})
         return messages
@@ -62,13 +64,20 @@ class Conversation:
     def append_turn(self, user_text: str, assistant_text: str) -> Turn:
         """ターン確定。あふれた古いターンはローリング要約に畳む。
 
+        畳み込みはバッチ化(history_fold_batch_turns)。毎ターン畳むと system 内の
+        要約が毎ターン変わり、LLMサーバのプレフィックスKVキャッシュが要約位置から
+        先で毎回割れる。超過をためて N ターンに1回まとめて畳むことで、間のターンは
+        履歴が追記のみ(=プレフィックス安定)になり、再prefillが償却される。
+        履歴は一時的に max_history+batch ターンまで伸びるが、回答長は
+        summary_threshold_chars とプロンプト指示で抑えられており実害は小さい。
+
         返り値は assistant の Turn(後から summary を差し込むため)。
         """
         self.turns.append(Turn(role="user", content=user_text))
         assistant = Turn(role="assistant", content=assistant_text)
         self.turns.append(assistant)
         overflow = len(self.turns) - settings.max_history * 2
-        if overflow > 0:
+        if overflow >= max(1, settings.history_fold_batch_turns) * 2:
             dropped, self.turns = self.turns[:overflow], self.turns[overflow:]
             lines = [self.rolling_summary] if self.rolling_summary else []
             labels = {"user": "ユーザー", "assistant": "キャラ"}

@@ -24,6 +24,10 @@ class Settings:
     summary_threshold_chars: int = int(os.getenv("SUMMARY_THRESHOLD_CHARS", "150"))
     summary_max_chars: int = int(os.getenv("SUMMARY_MAX_CHARS", "100"))
     rolling_summary_max_chars: int = int(os.getenv("ROLLING_SUMMARY_MAX_CHARS", "600"))
+    # 畳み込みのバッチ化: 超過がこのターン数たまるまで要約に畳まない。
+    # 畳むたびに system(要約) が変わりプレフィックスKVキャッシュが割れるため、
+    # 毎ターンではなくNターンに1回へ償却する(間は履歴が追記のみ=キャッシュ有効)
+    history_fold_batch_turns: int = int(os.getenv("HISTORY_FOLD_BATCH_TURNS", "3"))
 
     reply_max_tokens: int = int(os.getenv("REPLY_MAX_TOKENS", "400"))
     reply_temperature: float = float(os.getenv("REPLY_TEMPERATURE", "0.8"))
