@@ -81,7 +81,7 @@ The price is that time-to-first-video includes **the full completion of LLM gene
 
 ## 8. The first-response latency budget
 
-"From when you stop speaking to when the character starts speaking" is the sum of three segments:
+"From when the user stops speaking to when the character starts speaking" is the sum of three segments:
 
 1. **Speech finalization**: 900 ms of silence (the VAD's cut decision — shorter and it would cut on mid-utterance breaths)
 2. **Reply generation**: LLM streaming — but video start waits for **full completion** (section 7), so what matters here is total generation time, not TTFT. Held down by the short-reply instruction and the cache design above
