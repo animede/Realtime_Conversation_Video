@@ -30,8 +30,11 @@ const Player = (() => {
   let stageCharacter, stageIdle, stageIdleB, idleStages, players, caption;
 
   const IDLE_REFRESH_TIMEOUT_MS = 5 * 60 * 1000;
-  // return_idle の最終チャンクで、無音尾(FLF収束区間)をどこまで見せるか(0〜1)
-  const TAIL_PLAY_RATIO = 0.35;
+  // return_idle の最終チャンクは末尾が待機ポーズへ収束する。収束は終端近くで
+  // 急激に進む(途中で切るとポーズ不一致、最後まで見せるとほぼ静止)ため、
+  // 割合ではなく「終端の固定秒数だけ手前」で待機へ渡す。この区間はほぼ静止
+  // なので、代わりに待機動画(微動あり)を見せた方が生きて見える。
+  const TAIL_TRIM_SECONDS = 0.5;
   let lastUserActivity = Date.now();
 
   function absolute(url) {
@@ -316,7 +319,7 @@ const Player = (() => {
     if (!current?.speech_duration) return;
     let cutAt = current.speech_duration;
     if (current.turn_final && latestSession?.turn_end_mode === "return_idle" && current.duration) {
-      cutAt += (current.duration - current.speech_duration) * TAIL_PLAY_RATIO;
+      cutAt = Math.max(current.speech_duration, current.duration - TAIL_TRIM_SECONDS);
     }
     if (player.currentTime < cutAt) return;
     // LTXクリップは固定尺で、短い発話は無音でパディングされる。
