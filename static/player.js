@@ -306,6 +306,10 @@ const Player = (() => {
     if (playingIndex === null) return;
     const current = chunks.find(item => item.index === playingIndex);
     const player = players[activePlayer];
+    // return_idle では最終チャンクの末尾が待機ポーズへFLF錨止めされている。
+    // ここで早切りすると錨止めフレームに到達せず連続性が失われるので、
+    // 最終チャンクだけは無音尾ごと末尾まで再生する(ended経由で待機へ)。
+    if (current?.turn_final && latestSession?.turn_end_mode === "return_idle") return;
     if (!current?.speech_duration || player.currentTime < current.speech_duration) return;
     // LTXクリップは固定尺で、短い発話は無音でパディングされる。
     // 実音声の境界で止め、無音尾は待機ループが隠す。
