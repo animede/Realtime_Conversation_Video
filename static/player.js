@@ -30,6 +30,8 @@ const Player = (() => {
   let stageCharacter, stageIdle, stageIdleB, idleStages, players, caption;
 
   const IDLE_REFRESH_TIMEOUT_MS = 5 * 60 * 1000;
+  // return_idle の最終チャンクで、無音尾(FLF収束区間)をどこまで見せるか(0〜1)
+  const TAIL_PLAY_RATIO = 0.6;
   let lastUserActivity = Date.now();
 
   function absolute(url) {
@@ -307,10 +309,16 @@ const Player = (() => {
     const current = chunks.find(item => item.index === playingIndex);
     const player = players[activePlayer];
     // return_idle では最終チャンクの末尾が待機ポーズへFLF錨止めされている。
-    // ここで早切りすると錨止めフレームに到達せず連続性が失われるので、
-    // 最終チャンクだけは無音尾ごと末尾まで再生する(ended経由で待機へ)。
-    if (current?.turn_final && latestSession?.turn_end_mode === "return_idle") return;
-    if (!current?.speech_duration || player.currentTime < current.speech_duration) return;
+    // 錨止めの収束区間(無音尾)は終端に近づくほど動きが減衰して静止に見える。
+    // 早く切るほどつながりが悪く、遅く切るほど止まって見える綱引きなので、
+    // 無音尾の途中(TAIL_PLAY_RATIO)で待機へ切り替える。0=語尾で即切り(旧動作)、
+    // 1=末尾まで再生。
+    if (!current?.speech_duration) return;
+    let cutAt = current.speech_duration;
+    if (current.turn_final && latestSession?.turn_end_mode === "return_idle" && current.duration) {
+      cutAt += (current.duration - current.speech_duration) * TAIL_PLAY_RATIO;
+    }
+    if (player.currentTime < cutAt) return;
     // LTXクリップは固定尺で、短い発話は無音でパディングされる。
     // 実音声の境界で止め、無音尾は待機ループが隠す。
     player.pause();
