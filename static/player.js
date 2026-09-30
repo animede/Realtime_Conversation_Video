@@ -31,7 +31,7 @@ const Player = (() => {
 
   const IDLE_REFRESH_TIMEOUT_MS = 5 * 60 * 1000;
   // return_idle の最終チャンクで、無音尾(FLF収束区間)をどこまで見せるか(0〜1)
-  const TAIL_PLAY_RATIO = 0.6;
+  const TAIL_PLAY_RATIO = 0.35;
   let lastUserActivity = Date.now();
 
   function absolute(url) {

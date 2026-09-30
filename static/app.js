@@ -32,6 +32,7 @@
   const roleInput = document.getElementById("role-input");
   const voiceIdInput = document.getElementById("voice-id-input");
   const applySettings = document.getElementById("apply-settings");
+  const returnIdleToggle = document.getElementById("return-idle-toggle");
   const chatLog = document.getElementById("chat-log");
   const saveLogButton = document.getElementById("save-log");
   const chatText = document.getElementById("chat-text");
@@ -162,6 +163,7 @@
       appliedRole = roleInput.value;
       appliedVoiceId = String(rnvSession.voice_id);
       connectBackendEvents();
+      await applyReturnIdle();
       Player.attach(rnvSession, `${rnvBase}${preset.thumbnail_url}`);
       presetPanel.hidden = true;
       chatPanel.hidden = false;
@@ -208,6 +210,36 @@
     if (voiceDirty && Number.isFinite(voiceId)) appliedVoiceId = voiceIdInput.value;
     if (announce || roleDirty || voiceDirty) setAppStatus("ROLEと話者IDを反映しました");
   }
+
+  // 話し終わり→待機のつなぎ方(r-n-vの turn_end_mode)。連続性優先(return_idle)か
+  // 動きの勢い優先(free)かは好みが分かれるため、フロントで切替できるようにする。
+  const RETURN_IDLE_STORAGE_KEY = "rcvReturnIdle";
+
+  function loadReturnIdlePreference() {
+    try { return (localStorage.getItem(RETURN_IDLE_STORAGE_KEY) ?? "1") === "1"; }
+    catch { return true; }
+  }
+
+  async function applyReturnIdle() {
+    if (!rnvSession) return;
+    const wanted = returnIdleToggle.checked ? "return_idle" : "free";
+    if (rnvSession.turn_end_mode === wanted) return;
+    try {
+      const response = await fetch(`${rnvBase}/api/sessions/${rnvSession.id}/settings`, {
+        method: "PATCH",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({turn_end_mode: wanted}),
+      });
+      if (response.ok) rnvSession = await response.json();
+    } catch {}
+  }
+
+  returnIdleToggle.checked = loadReturnIdlePreference();
+  returnIdleToggle.addEventListener("change", () => {
+    try { localStorage.setItem(RETURN_IDLE_STORAGE_KEY, returnIdleToggle.checked ? "1" : "0"); }
+    catch {}
+    applyReturnIdle();
+  });
 
   applySettings.addEventListener("click", async () => {
     try {
