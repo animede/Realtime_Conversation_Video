@@ -234,6 +234,31 @@
     } catch {}
   }
 
+  // 話し終わりの収束モーションを末尾から何秒切って待機に渡すか(好みで調整)
+  const TAIL_TRIM_STORAGE_KEY = "rcvTailTrim";
+  const tailTrimInput = document.getElementById("tail-trim-input");
+  const tailTrimValue = document.getElementById("tail-trim-value");
+
+  function applyTailTrim(seconds) {
+    Player.setTailTrim(seconds);
+    tailTrimValue.textContent = `${seconds.toFixed(1)}秒`;
+  }
+
+  {
+    let stored = 0.5;
+    try { stored = parseFloat(localStorage.getItem(TAIL_TRIM_STORAGE_KEY) ?? "0.5"); }
+    catch {}
+    if (!Number.isFinite(stored) || stored < 0 || stored > 1.5) stored = 0.5;
+    tailTrimInput.value = String(stored);
+    applyTailTrim(stored);
+  }
+  tailTrimInput.addEventListener("input", () => {
+    const seconds = parseFloat(tailTrimInput.value);
+    applyTailTrim(seconds);
+    try { localStorage.setItem(TAIL_TRIM_STORAGE_KEY, String(seconds)); }
+    catch {}
+  });
+
   returnIdleToggle.checked = loadReturnIdlePreference();
   returnIdleToggle.addEventListener("change", () => {
     try { localStorage.setItem(RETURN_IDLE_STORAGE_KEY, returnIdleToggle.checked ? "1" : "0"); }

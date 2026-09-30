@@ -34,7 +34,8 @@ const Player = (() => {
   // 急激に進む(途中で切るとポーズ不一致、最後まで見せるとほぼ静止)ため、
   // 割合ではなく「終端の固定秒数だけ手前」で待機へ渡す。この区間はほぼ静止
   // なので、代わりに待機動画(微動あり)を見せた方が生きて見える。
-  const TAIL_TRIM_SECONDS = 0.5;
+  // 好みが分かれるため設定UIから変更できる(setTailTrim)。
+  let tailTrimSeconds = 0.5;
   let lastUserActivity = Date.now();
 
   function absolute(url) {
@@ -340,7 +341,7 @@ const Player = (() => {
     if (!current?.speech_duration) return;
     let cutAt = current.speech_duration;
     if (current.turn_final && latestSession?.turn_end_mode === "return_idle" && current.duration) {
-      cutAt = Math.max(current.speech_duration, current.duration - TAIL_TRIM_SECONDS);
+      cutAt = Math.max(current.speech_duration, current.duration - tailTrimSeconds);
     }
     if (player.currentTime < cutAt) return;
     // LTXクリップは固定尺で、短い発話は無音でパディングされる。
@@ -459,5 +460,9 @@ const Player = (() => {
     return ["chatting", "synthesizing", "generating", "playable"].includes(latestSession.status);
   }
 
-  return {init, attach, reset, isSpeaking, session: () => latestSession};
+  function setTailTrim(seconds) {
+    if (Number.isFinite(seconds) && seconds >= 0) tailTrimSeconds = seconds;
+  }
+
+  return {init, attach, reset, isSpeaking, setTailTrim, session: () => latestSession};
 })();
