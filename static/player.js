@@ -284,9 +284,22 @@ const Player = (() => {
     let targetPlayer = activePlayer;
     if (preloadedIndex === chunk.index) targetPlayer = 1 - activePlayer;
     const player = players[targetPlayer];
+    const outgoing = players[activePlayer];
     loadPlayer(player, chunk);
-    players[activePlayer].classList.remove("active");
-    player.classList.add("active");
+    // opacityのクロスフェード中は両方が半透明になり背景が透けて明滅する。
+    // 新側を上に重ねて瞬時に出し、描画が始まってから旧側を引っ込める。
+    if (player !== outgoing) {
+      player.style.zIndex = "2";
+      outgoing.style.zIndex = "1";
+      player.style.transition = "none";
+      player.classList.add("active");
+      void player.offsetWidth;
+      player.style.transition = "";
+      player.addEventListener("playing",
+        () => outgoing.classList.remove("active"), {once: true});
+    } else {
+      player.classList.add("active");
+    }
     activePlayer = targetPlayer;
     preloadedIndex = null;
     playingIndex = chunk.index;
@@ -407,6 +420,7 @@ const Player = (() => {
     players.forEach(player => {
       player.pause();
       player.classList.remove("active");
+      player.style.zIndex = "";
       player.removeAttribute("src");
       delete player.dataset.chunkIndex;
       player.load();
