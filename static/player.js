@@ -286,17 +286,25 @@ const Player = (() => {
     const player = players[targetPlayer];
     const outgoing = players[activePlayer];
     loadPlayer(player, chunk);
-    // opacityのクロスフェード中は両方が半透明になり背景が透けて明滅する。
-    // 新側を上に重ねて瞬時に出し、描画が始まってから旧側を引っ込める。
+    // opacityのクロスフェードは両方が半透明になる瞬間に背景が透けて明滅する。
+    // かといって2枚を不透明のまま重ねると合成レイヤの組み替えでティアリング
+    // 状の横ズレが出る。そこで新側の最初のフレームが実際に描画された瞬間に、
+    // フェードなしで旧→新を同時に入れ替える(重なり期間ゼロ)。
     if (player !== outgoing) {
-      player.style.zIndex = "2";
-      outgoing.style.zIndex = "1";
-      player.style.transition = "none";
-      player.classList.add("active");
-      void player.offsetWidth;
-      player.style.transition = "";
-      player.addEventListener("playing",
-        () => outgoing.classList.remove("active"), {once: true});
+      const swap = () => {
+        player.style.transition = "none";
+        outgoing.style.transition = "none";
+        player.classList.add("active");
+        outgoing.classList.remove("active");
+        void player.offsetWidth;
+        player.style.transition = "";
+        outgoing.style.transition = "";
+      };
+      if (player.requestVideoFrameCallback) {
+        player.requestVideoFrameCallback(swap);
+      } else {
+        player.addEventListener("playing", swap, {once: true});
+      }
     } else {
       player.classList.add("active");
     }
