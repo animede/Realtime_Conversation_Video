@@ -7,6 +7,7 @@
   let rnvSession = null;
   let replyInProgress = false;
   let liveBubble = null;
+  let pendingUserBubble = null;
   let appliedRole = null;
   let appliedVoiceId = null;
 
@@ -66,8 +67,17 @@
     if (event.type === "turn_started") {
       replyInProgress = true;
       liveBubble = null;
+      // 音声入力では文字起こし(user_text)より先に返答ストリームが届くため、
+      // ユーザーバブルの場所を先に確保して表示順を守る
+      pendingUserBubble = addBubble("user pending", "（認識中…）");
     } else if (event.type === "user_text") {
-      addBubble("user", event.text);
+      if (pendingUserBubble) {
+        pendingUserBubble.textContent = event.text;
+        pendingUserBubble.classList.remove("pending");
+        pendingUserBubble = null;
+      } else {
+        addBubble("user", event.text);
+      }
     } else if (event.type === "reply_delta") {
       if (!liveBubble) liveBubble = addBubble("assistant live", "");
       liveBubble.textContent += event.text;
@@ -85,6 +95,12 @@
       setAppStatus(event.message, true);
     } else if (event.type === "turn_finished") {
       replyInProgress = false;
+      // 文字起こしが届かないままターンが終わった場合の後始末
+      if (pendingUserBubble) {
+        pendingUserBubble.textContent = "（音声入力）";
+        pendingUserBubble.classList.remove("pending");
+        pendingUserBubble = null;
+      }
     }
   }
 

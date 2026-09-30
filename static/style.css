@@ -213,6 +213,7 @@ h1 { font-size: 18px; margin: 0 0 8px; }
 .bubble.user { align-self: flex-end; background: #2f6fed; }
 .bubble.assistant { align-self: flex-start; background: #2a2f3d; }
 .bubble.live { opacity: 0.85; }
+.bubble.pending { opacity: 0.6; font-style: italic; }
 .bubble.error { align-self: center; background: #4a2530; color: #ffb3b3; font-size: 12px; }
 
 .chat-form { display: flex; gap: 8px; margin-top: 8px; }
