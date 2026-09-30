@@ -18,6 +18,9 @@ class Settings:
     narration_url: str = os.getenv("NARRATION_URL", "http://localhost:8782").rstrip("/")
     # ブラウザから見たr-n-vのURL(別ホストから開く場合に上書きする)
     narration_public_url: str = os.getenv("NARRATION_PUBLIC_URL", "").rstrip("/")
+    # NARRATION_PROXY=1 のとき、ブラウザはr-n-vへ直接ではなく本アプリの
+    # /rnv 経由でアクセスする(トンネル1本で外部公開するための経路)
+    narration_proxy: bool = os.getenv("NARRATION_PROXY", "") == "1"
 
     # HOT-PATH lite(履歴・要約)
     max_history: int = int(os.getenv("MAX_HISTORY", "4"))
@@ -36,6 +39,8 @@ class Settings:
 
     @property
     def public_narration_url(self) -> str:
+        if self.narration_proxy:
+            return "/rnv"
         return self.narration_public_url or self.narration_url
 
 

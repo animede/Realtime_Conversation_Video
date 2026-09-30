@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -50,6 +50,50 @@ async def index():
 @app.get("/api/config")
 async def config():
     return {"narration_url": settings.public_narration_url}
+
+
+if settings.narration_proxy:
+    # NARRATION_PROXY=1 のときだけ有効。ブラウザ→r-n-vの全通信(プリセット、
+    # サムネイル、動画、SSE)を本アプリが中継し、外部公開をトンネル1本にする。
+    # SSEと動画があるため、レスポンスは必ずストリーミングで返す。
+    _proxy_client = httpx.AsyncClient(
+        base_url=settings.narration_url,
+        timeout=httpx.Timeout(10, read=None),  # SSEは読み側無制限
+    )
+
+    # ホップバイホップヘッダは中継しない(RFC 9110)
+    _HOP_HEADERS = {"connection", "keep-alive", "transfer-encoding", "te",
+                    "trailer", "upgrade", "proxy-authenticate", "proxy-authorization",
+                    "host", "content-length"}
+
+    @app.api_route("/rnv/{path:path}",
+                   methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"])
+    async def narration_proxy(path: str, request: Request):
+        headers = {k: v for k, v in request.headers.items()
+                   if k.lower() not in _HOP_HEADERS}
+        upstream_request = _proxy_client.build_request(
+            request.method,
+            f"/{path}",
+            params=request.query_params,
+            headers=headers,
+            content=request.stream(),
+        )
+        try:
+            upstream = await _proxy_client.send(upstream_request, stream=True)
+        except httpx.HTTPError as exc:
+            raise HTTPException(502, f"ナレーションサーバに接続できません: {exc}") from exc
+        response_headers = {k: v for k, v in upstream.headers.items()
+                            if k.lower() not in _HOP_HEADERS}
+
+        async def body():
+            try:
+                async for chunk in upstream.aiter_raw():
+                    yield chunk
+            finally:
+                await upstream.aclose()
+
+        return StreamingResponse(body(), status_code=upstream.status_code,
+                                 headers=response_headers)
 
 
 class ConversationCreate(BaseModel):
