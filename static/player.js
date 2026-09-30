@@ -156,13 +156,18 @@ const Player = (() => {
     if (idleAdvances - idleLastExtendAdvance < idlePoolSize) return;
     idleLastExtendAdvance = idleAdvances;
     idleExtendInFlight = true;
-    fetch(`${rnvBase}/api/sessions/${sessionId}/idle-pool`, {method: "POST"})
+    // キャラ切替後に旧セッションの応答が届くと旧キャラの待機動画が混入するため、
+    // 応答時点でセッションが変わっていたら捨てる
+    const requestSessionId = sessionId;
+    fetch(`${rnvBase}/api/sessions/${requestSessionId}/idle-pool`, {method: "POST"})
       .then(async response => {
         const data = await response.json();
-        if (response.ok) absorbIdlePool(data);
+        if (response.ok && sessionId === requestSessionId) absorbIdlePool(data);
       })
       .catch(() => {})
-      .finally(() => { idleExtendInFlight = false; });
+      .finally(() => {
+        if (sessionId === requestSessionId) idleExtendInFlight = false;
+      });
   }
 
   function preloadNextIdle() {
