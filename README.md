@@ -6,6 +6,8 @@
 
 r-n-v で登録したキャラクターとの会話に特化した薄いアプリです。動画生成・TTS・プリセットは r-n-v 側に任せ、会話の頭脳(ROLE 注入・マイク音声入力・履歴のローリング要約)をこちらが持ちます。
 
+r-n-v の動画生成のベース技術は、diffusers 実装の自作エンジン **[Diffusers-LTX2.5](https://github.com/animede/diffusers-ltx2_5)** と **[Diffusers-MinimaxH3](https://github.com/animede/Diffusers_minimax-h3)** です。量子化・低VRAM化・リアルタイム化の技術詳細は、それぞれのリポジトリを参照してください。
+
 ## 動作サンプル（実時間・50秒）
 
 

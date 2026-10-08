@@ -6,6 +6,8 @@ English | [日本語](README.md)
 
 This is a thin app specialized for conversation with characters registered in r-n-v. Video generation, TTS, and presets stay on the r-n-v side; the conversational brain — ROLE injection, microphone input, rolling history summarization — lives here.
 
+The video generation in r-n-v is built on my diffusers-based engines **[Diffusers-LTX2.5](https://github.com/animede/diffusers-ltx2_5)** and **[Diffusers-MinimaxH3](https://github.com/animede/Diffusers_minimax-h3)**. See those repositories for the quantization / low-VRAM / realtime techniques.
+
 ## Demo (real speed, 50 s)
 
 
