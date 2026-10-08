@@ -8,6 +8,27 @@ This is a thin app specialized for conversation with characters registered in r-
 
 The video generation in r-n-v is built on my diffusers-based engines **[Diffusers-LTX2.5](https://github.com/animede/diffusers-ltx2_5)** and **[Diffusers-MinimaxH3](https://github.com/animede/Diffusers_minimax-h3)**. See those repositories for the quantization / low-VRAM / realtime techniques.
 
+## One-command launch (hardware auto-detection)
+
+```bash
+./conversation-up.sh
+```
+
+Detects your GPU configuration (96GB + second GPU / 32GB + 8GB / **single 32GB /
+single 24GB**), picks the right preset, and starts gateway → H3 backend → r-n-v
+(headless) → this app, then opens the conversation screen (:8791). Services that are
+already running are reused as-is.
+
+- First run only: register a character in r-n-v (:8782); afterwards you only need the conversation screen
+- Stop: `./conversation-down.sh` (stops only what this launcher started)
+- Diagnose only: `./conversation-up.sh --doctor`
+- Paths and LLM/TTS URLs: copy `conversation.local.env.example` to `conversation.local.env`
+- Prerequisites: AivisSpeech Engine and an OpenAI-compatible LLM must be running
+  (the launcher only health-checks them). **On single-GPU setups, do not co-locate
+  TTS/LLM on the same GPU**
+- On single 24GB/32GB setups the idle clips automatically use the silent speech model
+  (silent_ref2va)
+
 ## Demo (real speed, 50 s)
 
 

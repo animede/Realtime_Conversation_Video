@@ -8,6 +8,25 @@ r-n-v で登録したキャラクターとの会話に特化した薄いアプ�
 
 r-n-v の動画生成のベース技術は、diffusers 実装の自作エンジン **[Diffusers-LTX2.5](https://github.com/animede/diffusers-ltx2_5)** と **[Diffusers-MinimaxH3](https://github.com/animede/Diffusers_minimax-h3)** です。量子化・低VRAM化・リアルタイム化の技術詳細は、それぞれのリポジトリを参照してください。
 
+## ワンコマンド起動(ハードウェア自動判定)
+
+```bash
+./conversation-up.sh
+```
+
+GPU 構成を自動判定し(96GB+2枚目 / 32GB+8GB / **32GB 単騎 / 24GB 単騎**)、適切な
+プリセットで gateway → H3 バックエンド → r-n-v(ヘッドレス)→ 本アプリの順に起動して、
+会話画面(:8791)を開きます。既に動いているサービスはそのまま使います(多重起動しない)。
+
+- 初回のみ r-n-v(:8782)でキャラクターを登録してください(2回目以降は会話画面だけ)
+- 終了: `./conversation-down.sh`(この launcher が起動した分だけ停止)
+- 診断のみ: `./conversation-up.sh --doctor`
+- パス・LLM/TTS の URL の変更: `conversation.local.env.example` を
+  `conversation.local.env` にコピーして編集
+- 前提: AivisSpeech Engine と OpenAI 互換 LLM は別途起動しておくこと(launcher は
+  死活確認のみ)。**単騎構成では TTS/LLM を同じ GPU に同居させないこと**
+- 24GB/32GB 単騎では待機動画が自動で「無音会話モデル」方式(silent_ref2va)になります
+
 ## 動作サンプル（実時間・50秒）
 
 
