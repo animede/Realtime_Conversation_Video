@@ -259,3 +259,11 @@ h1 { font-size: 18px; margin: 0 0 8px; }
 /* 会話ログ保存 */
 .log-toolbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 .log-toolbar .tiny { font-size: 11px; padding: 2px 10px; }
+
+/* キャラ選択カードのエンジン・解像度バッジ(2026-10-09) */
+.preset-card .preset-meta {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  margin-top: 2px;
+}

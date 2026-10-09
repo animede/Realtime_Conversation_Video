@@ -113,6 +113,14 @@
 
   // --- プリセット選択と会話開始 -----------------------------------------
 
+  // エンジンと解像度の表示(例: "H3・352×640" / "LTX・480×640")。
+  // どちらも r-n-v の /api/presets が返すフィールドから作る。
+  function presetMetaText(preset) {
+    const engine = (preset.video_engine || "ltx25") === "h3" ? "H3" : "LTX";
+    const m = /(\d{3,4})x(\d{3,4})/.exec(preset.video_profile || "");
+    return m ? `${engine}・${m[1]}×${m[2]}` : engine;
+  }
+
   async function loadPresets() {
     presetList.textContent = "読み込み中…";
     try {
@@ -127,7 +135,10 @@
         img.alt = preset.name;
         const label = document.createElement("span");
         label.textContent = preset.name;
-        card.append(img, label);
+        const meta = document.createElement("span");
+        meta.className = "preset-meta";
+        meta.textContent = presetMetaText(preset);
+        card.append(img, label, meta);
         card.addEventListener("click", () => selectPreset(preset));
         return card;
       }));
@@ -167,7 +178,7 @@
       Player.attach(rnvSession, `${rnvBase}${preset.thumbnail_url}`);
       presetPanel.hidden = true;
       chatPanel.hidden = false;
-      characterName.textContent = preset.name;
+      characterName.textContent = `${preset.name}(${presetMetaText(preset)})`;
       chatLog.replaceChildren();
       setAppStatus("会話を開始できます");
     } catch (error) {
