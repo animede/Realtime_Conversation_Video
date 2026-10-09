@@ -29,6 +29,18 @@ already running are reused as-is.
 - On single 24GB/32GB setups the idle clips automatically use the silent speech model
   (silent_ref2va)
 
+### Automatic engine switching
+
+Each character stores its video engine (H3 / LTX, shown on the card badge) and the
+backend switches automatically when you pick a character (the gateway manages
+exclusivity).
+
+- Switching between characters on the same engine: nearly instant (models stay resident)
+- **Switching across engines (H3 <-> LTX): only the first reply takes tens of seconds
+  to ~1 minute** (process swap + first weight load); later turns run at normal speed
+- Characters with larger resolution badges generate slower; re-register a character at
+  a resolution appropriate for your GPU if it is too heavy
+
 ## Demo (real speed, 50 s)
 
 
