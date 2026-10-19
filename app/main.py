@@ -69,6 +69,10 @@ if settings.narration_proxy:
     @app.api_route("/rnv/{path:path}",
                    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"])
     async def narration_proxy(path: str, request: Request):
+        # r-n-v の URL 取り込みはサーバ上のファイルを読めるため中継しない
+        # (中継すると接続元が 127.0.0.1 に見え、r-n-v 側のローカル限定判定をすり抜ける)
+        if path.strip("/").startswith("api/fetch-image"):
+            raise HTTPException(403, "この操作は中継できません")
         headers = {k: v for k, v in request.headers.items()
                    if k.lower() not in _HOP_HEADERS}
         upstream_request = _proxy_client.build_request(
